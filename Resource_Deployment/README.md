@@ -11,7 +11,7 @@ We are using the data provided by [this Kaggle Open Dataset](https://www.kaggle.
 
 
 ## Step 2: Create Azure Synapse Analytics (workspace preview)
-In this step you will deploy an Azure Synapse Analytics (workspace preview), a SQL Pool, and a Spark Pool in the Azure Synapse Analytics (workspace preview), an Azure Data Lake (Gen2) Storage Account and a Cosmos DB Account into your Azure Subscription that you are using for this solution accelerator. 
+In this step you will deploy an Azure Synapse Analytics (workspace preview) and a Spark Pool in the Azure Synapse Analytics (workspace preview), an Azure Data Lake (Gen2) Storage Account and a Cosmos DB Account into your Azure Subscription that you are using for this solution accelerator. 
 
 
 **Parameters**
@@ -140,12 +140,12 @@ az ml workspace share -w <workspace-name> -g <resource-group> --user <object-id>
  
 1. Launch the Azure Machine Learning Studio: 
     - Go to the resource page in the portal and click the "Launch Studio" 
-3. Go to "Compute", click "Inference Clusters" and click "+ New": 
+2. Go to "Compute", click "Inference Clusters" and click "+ New": 
     - fill in the Compute Name, Region, choose the Dev-test or Production for the cluster purpose and select Create
 
-4. In the repository on your local machine, open `Analytics Deployment\amls\model_deployment\` in an IDE like VS Code  
-5. Run `pip install -r requirements.txt`  
-6. Edit the `download_model.py` file:  
+3. In the repository on your local machine, open `Analytics Deployment\amls\model_deployment\` in an IDE like VS Code  
+4. Run `pip install -r requirements.txt`  
+5. Edit the `download_model.py` file:  
     -  In the file `download_model.py`, edit the following:  
         ```python
         # Enter the name of the Azure Data Lake Storage Gen2 Account
@@ -157,7 +157,7 @@ az ml workspace share -w <workspace-name> -g <resource-group> --user <object-id>
         ```  
     - Now run `python download_model.py`  
         - This should create a ZIP of the model on your local machine.  
-7. Before deploying the model, edit the `score.py` file and the `deploy_model.py` file.  
+6. Before deploying the model, edit the `score.py` file and the `deploy_model.py` file.  
     - `score.py` at the top of the file in the `init()` function:   
         ```python
         def init():
@@ -187,51 +187,46 @@ az ml workspace share -w <workspace-name> -g <resource-group> --user <object-id>
         # Name of the Azure Kubernetes Service that you deployed
         AKS_CLUSTER_NAME=""
         ```  
-8. Now run `python deploy_model.py` and the model will be registered with AMLS and deployed to the AKS cluster  
+7. Now run `python deploy_model.py` and the model will be registered with AMLS and deployed to the AKS cluster  
     
 ## Step 7: Setting Up the API Infrastructure  
-
-### Set Up the Azure Function  
-
-#### VS Code Instructions  
-  
-> **Note**: Ensure that you have the pre-requisities to develop and locally debug Python Azure functions. [See here](https://docs.microsoft.com/en-us/azure/developer/python/tutorial-vs-code-serverless-python-01#visual-studio-code-python-and-the-azure-functions-extension) for details.  
-1. Deploy a Azure Function App with Python as the Runtime Stack  
-    - Record the value for `AzureWebJobsStorage`  
-2. Open a VS Code at the following filepath of this repository: `1. Analytics Deployment\api-layer\az_func\__app__`  
-3. Edit the `local.settings.json` to fill in the following values:  
-    ```
-        {
-            "IsEncrypted": false,
-            "Values": {
-                "FUNCTIONS_WORKER_RUNTIME": "python",
-                "COSMOS_DB_ACCOUNT_NAME": "", // Account Name is the name of the actual Cosmos DB resource
-                "COSMOS_DB_DATABASE_NAME": "product_data",
-                "DETAIL_COLLECTION": "product_details",
-                "USER_REC_COLLECTION": "user_recommendations",
-                "COSMOS_KEY": "", // Primary Key found in Azure Portal in the Cosmos DB Resource Blade
-                "AMLS_SERVICE_KEY": "", // Web Service Key Found in Azure Machine Learning Studio under Deployments
-                "AzureWebJobsStorage": "", // Connection String found in Configuration blade of Function App
-                "SCORING_URL": "" // URL of the Scoring Endpoint Found in Azure Machine Learning Studio under Deployments
-            }
-        }
-    ```
-4. Go to the Azure Function Extension and publish the function to the Function App deployed in Step 1 of this section.  
-5. Go to the Function App in the Extension menu of VS Code and right click on the `Application Settings` and choose `Upload Local Settings`  
-    - ![Index Setup](./imgs/app_setting.png)  
-  
 ### Set Up Azure API Management  
-  
-1. Deploy Azure API Management in the resource group that you are using for this Solution Accelerator  
-2. In Azure API Management, go to `APIs` and choose `Function App`  
-    - ![Indexer Setup](./imgs/import_function_menu.png)  
-3. Choose the Function App that you deployed and import all the functions.  
+1. Navigate to the [Application_Backend_Deployment](../Application_Backend_Deployment/README.md) and follow the steps to deploy the API endpoints.
+2. Deploy Azure API Management in the resource group that you are using for this Solution Accelerator  
+2. In the Azure API Management, go to `APIs` and choose `Blank API` 
 4. Configure the name of your API and click Create  
-  
+
 > Now you are ready to integrate the API with your front-end by utilizing the API you built in Azure API Managment.  
   
 #### Example Recommendation Call  
 
 ```https://{ENTER_YOUR_APIM_NAME}.net/{VERSION_NUM_OF_API}/get_shopper_recommendations?subscription-key={APIM_SUBSCRIPTION_KEY}&user_id=568778435```
 
+# Step 8: Setting Up the Event Hub 
+1. Run the following commands in Powershell to deploy an Event Hub Namespace and Event Hub into the resource group you are using for this solution accelerator. 
+
+    ```sh 
+    # Set your Azure subscription to the subscription used in this solution accelerator
     
+    # NOTE: you will need to replace the following: 
+    # - <Subscription-Id>
+    az account set --subscription <Subscription-Id>
+
+    # Create Event Hub namespace 
+
+    # NOTE: you will need to replace the following: 
+    # - <event-hub-namespace>, <resourse-group>, <location>
+    az eventhubs namespace create --name <event-hub-namespace> --resource-group <resource-group> -l <location>
+
+    # Creat Event Hub called clickthrough
+
+    # NOTE: you will need to replace the followng: 
+    # - <resource-group>, <event-hub-namespace>
+    az eventhubs eventhub create --name clickthrough --resource-group <resource-group> --namespace-name <event-hub-namespace>
+    ```
+2. Navigate to the Event Hub Overview in the Azure portal
+    - From the Overview, go to `Event Hubs`, click the `clickthrough` Event Hub created in the previous step
+    - Click `Capture events` to turn on and configure the settings to send events to the storage account you are using for this solution accelerator.  
+3. Navigate to the `clickthrough` Event Hub and click `Shared access policies`, click "+ Add" and configure a new policy and click `send`. 
+    - Click `Create`
+4. Navigate to the [Application_Frontend_Deployment/contoso-retail/src/config.ts](../Application_Frontend_Deployment/contoso-retail/src/config.ts) to add the `EVENT_HUB_ACCESS_KEY`, `EVENT_HUB_KEYNAME`, and `EVENT_HUB_NAMESPACE` created in the previous steps to the application. 

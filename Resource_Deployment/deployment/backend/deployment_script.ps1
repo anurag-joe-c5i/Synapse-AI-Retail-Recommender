@@ -35,11 +35,6 @@ Import-Module Az.Synapse
 Write-Host "creating synapse workspace" 
 New-AzSynapseWorkspace -ResourceGroupName $resource_group -Name $workspace_name -Location $location -DefaultDataLakeStorageAccountName $storage_account -DefaultDataLakeStorageFilesystem $file_system -SqlAdministratorLoginCredential $user
 
-$sql_pool = $resource_name + "sql"
-
-Write-Host "creating SQL pool" 
-New-AzSynapseSqlPool -WorkspaceName $workspace_name -Name $sql_pool -PerformanceLevel DW100c
-
 $spark_pool = $resource_name + "sp"
  
 Write-Host "creating Spark pool"
