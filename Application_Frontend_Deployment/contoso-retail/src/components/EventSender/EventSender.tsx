@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as EventHubLib from "@azure/event-hubs";
-import { EVENT_HUB_KEYNAME, EVENT_HUB_ACCESS_KEY } from "../../config";
+import { EVENT_HUB_KEYNAME, EVENT_HUB_ACCESS_KEY, EVENT_HUB_NAMESPACE } from "../../config";
 import { IEventMessage } from '../../interfaces/IEventMessage';
 
 /** Method for sending events to Event Hub in Azure. */
@@ -20,7 +20,7 @@ class EventHubProcuder {
     private eventHubclient: EventHubLib.EventHubProducerClient;
 
     constructor() {
-        this.connectionString = `Endpoint = sb://contosoretail.servicebus.windows.net/;SharedAccessKeyName=${EVENT_HUB_KEYNAME};SharedAccessKey=${EVENT_HUB_ACCESS_KEY};`;
+        this.connectionString = `Endpoint = sb://${EVENT_HUB_NAMESPACE}.servicebus.windows.net/;SharedAccessKeyName=${EVENT_HUB_KEYNAME};SharedAccessKey=${EVENT_HUB_ACCESS_KEY};`;
         this.eventHubName = "clickthorugh";
         this.eventHubclient = new EventHubLib.EventHubProducerClient(this.connectionString, this.eventHubName);
     }
