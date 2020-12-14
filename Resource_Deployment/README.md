@@ -43,7 +43,7 @@ In order to read files from your Azure Storage Account from the Azure Synapse Wo
 6. Click "Save" at the bottom 
 
 ### Step 2.2: Upload Additional Dataset 
-We use the `product_details.json` to enhance the products served to the front-end with image information and cleaned up names.  
+We use the [`product_details.json`](../Analytics_Deployment/data/product_detail.json) to enhance the products served to the front-end with image information and cleaned up names.  
 
 1. Upload this JSON to the Azure Data Lake Storage Account attached to your Synapse Studio  
     - Make sure you put it into the filesystem that is the Primary Filesystem for the Synapse Studio  
